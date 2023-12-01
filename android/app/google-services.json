@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "679178260693",
+    "project_id": "shramikayaapp",
+    "storage_bucket": "shramikayaapp.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:679178260693:android:26dd8fff812133e23f525c",
+        "android_client_info": {
+          "package_name": "com.example.shramikaya_app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "679178260693-d93id2o5aioip53gm370etnd96cfjjrg.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.shramikaya_app",
+            "certificate_hash": "ae9333187a93db1206baf955724684c309c029ac"
+          }
+        },
+        {
+          "client_id": "679178260693-objmc8m294dapqnopo0res9mpa6vqd1c.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBy3em3VVFVvpwuqGJiJUv4mvrZoMp4iMw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "679178260693-objmc8m294dapqnopo0res9mpa6vqd1c.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
