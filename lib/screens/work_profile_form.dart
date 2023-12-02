@@ -1,7 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:shramikaya_app/screens/profile_page.dart';
 import 'package:shramikaya_app/utils/colors.dart';
 
 class WorkProfileForm extends StatefulWidget {
@@ -174,7 +173,7 @@ Future createWorkProfile(
     required String address,
     required String profile,
     required String jobCategory}) async {
-  final uid = FirebaseAuth.instance.currentUser!.uid!;
+  final uid = FirebaseAuth.instance.currentUser!.uid;
   final docWorker = FirebaseFirestore.instance.collection("worker").doc(uid);
   final data = {
     "displayName": name,

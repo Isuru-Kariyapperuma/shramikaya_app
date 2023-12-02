@@ -35,7 +35,7 @@ class _JobCardState extends State<JobCard> {
                       decoration: const BoxDecoration(
                         shape: BoxShape.circle,
                         image: DecorationImage(
-                          image: AssetImage("assets/avatar.jpg"),
+                          image: AssetImage("assets/avatar.webp"),
                         ),
                       ),
                       width: 50,

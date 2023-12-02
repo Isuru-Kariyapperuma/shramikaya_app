@@ -1,8 +1,10 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_sign_in/google_sign_in.dart';
-import 'package:shramikaya_app/screens/work_profile_form.dart';
 import 'package:shramikaya_app/utils/colors.dart';
+import 'package:shramikaya_app/widgets/create_worker_profile.dart';
+import 'package:shramikaya_app/widgets/profile_details.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -12,6 +14,23 @@ class ProfilePage extends StatefulWidget {
 }
 
 class _ProfilePageState extends State<ProfilePage> {
+  bool isWorker = false;
+
+  @override
+  void initState() {
+    super.initState();
+    checkIsWorker();
+  }
+
+  Future<void> checkIsWorker() async {
+    final userId = FirebaseAuth.instance.currentUser!.uid;
+    bool isWorkerResult = await checkDocumentExists(userId);
+
+    setState(() {
+      isWorker = isWorkerResult;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final displayName = FirebaseAuth.instance.currentUser!.displayName!;
@@ -102,104 +121,37 @@ class _ProfilePageState extends State<ProfilePage> {
                   ),
                 ),
               ),
-              Padding(
-                padding: const EdgeInsets.all(15.1),
-                child: Card(
-                  elevation: 5,
-                  child: Container(
-                    alignment: Alignment.center,
-                    margin: const EdgeInsets.only(
-                      left: 0,
-                      top: 5,
-                      right: 0,
-                      bottom: 5,
-                    ),
-                    width: 650,
-                    height: 350,
-                    padding: const EdgeInsets.all(16),
-                    decoration: const BoxDecoration(
-                      //borderRadius: BorderRadius.all(Radius.circular(10)),
-                      color: Color.fromARGB(255, 249, 250, 250),
-                    ),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(
-                              Icons.control_point_rounded,
-                              size: 100,
-                            ),
-                          ],
-                        ),
-                        const Text(
-                          'Publish Your First Gig',
-                          style: TextStyle(
-                            fontSize: 25,
-                            color: Color.fromARGB(255, 33, 16, 16),
-                          ),
-                        ),
-                        const SizedBox(height: 20),
-                        const Column(
-                          children: [
-                            Text(
-                              'You can register as a seller',
-                              style: TextStyle(
-                                fontSize: 16,
-                                color: Colors.black,
-                              ),
-                              textAlign: TextAlign.center,
-                            ),
-                            Text(
-                              'and upgrade your job to the next level.',
-                              style: TextStyle(
-                                fontSize: 16,
-                                color: Colors.black,
-                              ),
-                              textAlign: TextAlign.center,
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 30),
-                        Align(
-                          alignment: Alignment.center,
-                          child: ElevatedButton(
-                            onPressed: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                    builder: (context) =>
-                                        const WorkProfileForm()),
-                              );
-                            },
-                            style: ElevatedButton.styleFrom(
-                              minimumSize: const Size(295, 60),
-                              padding: const EdgeInsets.all(16.0),
-                              foregroundColor: Colors.white,
-                              backgroundColor: secondaryColor,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(0.0),
-                              ),
-                            ),
-                            child: const Text(
-                              'Create your work profile',
-                              style: TextStyle(
-                                fontSize: 18,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
+              isWorker ? const ProfileDetails() : const CreateWorkerProfile(),
+
               // Add the rest of your content here
             ],
           ),
         ),
       ),
     );
+  }
+}
+
+// Stream<List<Worker>> readWorker() => FirebaseFirestore.instance
+//     .collection('worker')
+//     .snapshots()
+//     .map((snapshot) =>
+//         snapshot.docs.map((doc) => Worker.fromJson(doc.data())).toList());
+
+Future<bool> checkDocumentExists(userId) async {
+  // Reference to the 'worker' collection
+  CollectionReference workers = FirebaseFirestore.instance.collection('worker');
+
+  // Reference to the specific document using the provided document ID
+  DocumentReference documentRef = workers.doc(userId);
+
+  // Get the document snapshot
+  DocumentSnapshot documentSnapshot = await documentRef.get();
+
+  // Check if the document exists
+  if (documentSnapshot.exists) {
+    return true;
+  } else {
+    return false;
   }
 }

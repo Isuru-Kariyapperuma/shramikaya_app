@@ -19,6 +19,7 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   late StreamSubscription subscription;
+  late StreamSubscription locationSubscription;
   bool isDeviceConnected = false;
   bool isAlertSet = false;
 
@@ -115,5 +116,4 @@ class _HomePageState extends State<HomePage> {
           ],
         ),
       );
-      
 }
