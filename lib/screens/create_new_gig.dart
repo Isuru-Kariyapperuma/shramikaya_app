@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:geocoding/geocoding.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:shramikaya_app/utils/colors.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:url_launcher/url_launcher_string.dart';
+import 'package:uuid/uuid.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 class CreateNewGig extends StatefulWidget {
   const CreateNewGig({super.key});
@@ -22,12 +26,57 @@ class _CreateNewGigState extends State<CreateNewGig> {
 
   TextEditingController _controllerJobName = new TextEditingController();
   TextEditingController _controllerMobileNumber = new TextEditingController();
-  TextEditingController _controllerAddress = new TextEditingController();
+  var _controllerLocation = new TextEditingController();
 
   String selectedValue = "Radio and TV";
   String locationInfo = "Click 'Add Loacation' button!";
   late String lat;
   late String long;
+  String country = '';
+  String name = '';
+  String street = '';
+  String postalCode = '';
+  var uuid = new Uuid();
+  String? _sessionToken;
+  List<dynamic> _placeList = [];
+  bool isVisibale = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _controllerLocation.addListener(() {
+      _onChanged();
+    });
+  }
+
+  _onChanged() {
+    if (_sessionToken == null) {
+      setState(() {
+        _sessionToken = uuid.v4();
+      });
+    }
+    getSuggestion(_controllerLocation.text);
+    setState(() {
+      isVisibale = true;
+    });
+  }
+
+  void getSuggestion(String input) async {
+    String kPLACES_API_KEY = "AIzaSyCg3dIaZTzWGRAFeL8UvqUj9LYt2k4PxXM";
+    String type = '(regions)';
+    String baseURL =
+        'https://maps.googleapis.com/maps/api/place/autocomplete/json';
+    String request =
+        '$baseURL?input=$input&key=$kPLACES_API_KEY&sessiontoken=$_sessionToken';
+    var response = await http.get(Uri.parse(request));
+    if (response.statusCode == 200) {
+      setState(() {
+        _placeList = json.decode(response.body)['predictions'];
+      });
+    } else {
+      throw Exception('Failed to load predictions');
+    }
+  }
 
   Future<Position> _getCurrentLocation() async {
     bool serviceEnable = await Geolocator.isLocationServiceEnabled();
@@ -63,7 +112,7 @@ class _CreateNewGigState extends State<CreateNewGig> {
         long = position.longitude.toString();
 
         setState(() {
-          locationInfo = "The location is set successfully.";
+          locationInfo = street;
         });
       },
     );
@@ -76,6 +125,25 @@ class _CreateNewGigState extends State<CreateNewGig> {
     await canLaunchUrlString(googleUrl)
         ? launchUrlString(googleUrl)
         : throw 'Could not lanuch $googleUrl';
+  }
+
+  Future<void> getLocation() async {
+    double latNum = double.parse(lat);
+    double longNum = double.parse(long);
+
+    List<Placemark> placemark = await placemarkFromCoordinates(latNum, longNum);
+
+    print("Country " + placemark[0].country.toString());
+    print("Name " + placemark[0].name.toString());
+    print("Street " + placemark[0].street.toString());
+    print("PostalCode " + placemark[0].postalCode.toString());
+
+    setState(() {
+      country = placemark[0].country!;
+      name = placemark[0].name!;
+      street = placemark[0].street!;
+      postalCode = placemark[0].postalCode!;
+    });
   }
 
   void showLocationServiceAlertDialog() {
@@ -170,51 +238,36 @@ class _CreateNewGigState extends State<CreateNewGig> {
                         const SizedBox(
                           height: 15,
                         ),
-                        // TextField(
-                        //   controller: _controllerAddress,
-                        //   maxLines: 5,
-                        //   maxLength: 50,
-                        //   decoration: const InputDecoration(
-                        //       hintStyle: TextStyle(color: primaryColor),
-                        //       hintText: "Address"),
-                        //   style: const TextStyle(fontSize: 20),
-                        // ),
-                        Text(
-                          locationInfo,
+                        TextField(
+                          controller: _controllerLocation,
+                          maxLength: 30,
+                          decoration: const InputDecoration(
+                              hintStyle: TextStyle(color: primaryColor),
+                              hintText: "Location - ස්ථානය"),
                           style: const TextStyle(fontSize: 20),
                         ),
-                        const SizedBox(
-                          height: 20,
-                        ),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            ElevatedButton.icon(
-                              onPressed: () {
-                                _getCurrentLocation().then((value) {
-                                  lat = '${value.latitude}';
-                                  long = '${value.longitude}';
+                        Visibility(
+                          visible: isVisibale,
+                          child: ListView.builder(
+                            physics: NeverScrollableScrollPhysics(),
+                            shrinkWrap: true,
+                            itemCount: _placeList.length,
+                            itemBuilder: (context, index) {
+                              return GestureDetector(
+                                onTap: () {
                                   setState(() {
-                                    locationInfo =
-                                        "The location is set successfully.";
+                                    _controllerLocation.text =
+                                        _placeList[index]["description"];
+                                    isVisibale = false;
+                                    FocusScope.of(context).unfocus();
                                   });
-                                  _liveLocation();
-                                });
-                              },
-                              icon: const Icon(Icons.location_on),
-                              label: const Text("Add Location"),
-                            ),
-                            const SizedBox(
-                              width: 5,
-                            ),
-                            ElevatedButton.icon(
-                              onPressed: () {
-                                _openMap(lat, long);
-                              },
-                              icon: const Icon(Icons.map_outlined),
-                              label: const Text("Open Map"),
-                            ),
-                          ],
+                                },
+                                child: ListTile(
+                                  title: Text(_placeList[index]["description"]),
+                                ),
+                              );
+                            },
+                          ),
                         ),
                         const SizedBox(
                           height: 20,
@@ -235,7 +288,7 @@ class _CreateNewGigState extends State<CreateNewGig> {
                           onPressed: () {
                             final displayName = _controllerJobName.text;
                             final mobile = _controllerMobileNumber.text;
-                            final address = _controllerAddress.text;
+                            final address = _controllerLocation.text;
                             final jobCategory = selectedValue;
                             final profileImage =
                                 FirebaseAuth.instance.currentUser!.photoURL!;
