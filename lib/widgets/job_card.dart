@@ -1,21 +1,38 @@
 import 'package:flutter/material.dart';
 import 'package:shramikaya_app/utils/colors.dart';
+import 'package:url_launcher/url_launcher.dart';
 
-class JobCard extends StatefulWidget {
-  const JobCard({super.key});
+class JobCard extends StatelessWidget {
+  final String jobName;
+  final String price;
+  final String address;
+  final String displayName;
+  final String jobCategory;
+  final String profileUrl;
+  final String sellerLevel;
+  final int orderCount;
+  final String mobileNumber;
 
-  @override
-  State<JobCard> createState() => _JobCardState();
-}
+  const JobCard({
+    super.key,
+    required this.jobName,
+    required this.price,
+    required this.address,
+    required this.displayName,
+    required this.jobCategory,
+    required this.profileUrl,
+    required this.sellerLevel,
+    required this.orderCount,
+    required this.mobileNumber,
+  });
 
-class _JobCardState extends State<JobCard> {
   @override
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
       child: Container(
         width: double.infinity,
-        height: 280,
+        height: 320,
         decoration: const BoxDecoration(
           boxShadow: [
             BoxShadow(blurRadius: 5.0, color: Colors.grey),
@@ -32,10 +49,10 @@ class _JobCardState extends State<JobCard> {
                 child: Row(
                   children: [
                     Container(
-                      decoration: const BoxDecoration(
+                      decoration: BoxDecoration(
                         shape: BoxShape.circle,
                         image: DecorationImage(
-                          image: AssetImage("assets/avatar.webp"),
+                          image: NetworkImage(profileUrl),
                         ),
                       ),
                       width: 50,
@@ -44,20 +61,20 @@ class _JobCardState extends State<JobCard> {
                     const SizedBox(
                       width: 10,
                     ),
-                    const Text(
-                      'Chamara Singhabahu',
-                      style: TextStyle(fontSize: 18),
+                    Text(
+                      displayName,
+                      style: const TextStyle(fontSize: 18),
                     ),
                   ],
                 ),
               ),
-              const Text(
-                "Level one seller",
-                style: TextStyle(color: secondaryColor),
+              Text(
+                sellerLevel,
+                style: const TextStyle(color: secondaryColor),
               ),
-              const Text(
-                "Mount Satellite Dish",
-                style: TextStyle(
+              Text(
+                jobName,
+                style: const TextStyle(
                   fontSize: 24,
                   fontFamily: "Baloo",
                   color: primaryColor,
@@ -66,32 +83,49 @@ class _JobCardState extends State<JobCard> {
               SizedBox(
                 height: MediaQuery.of(context).size.height * 0.01,
               ),
-              const Padding(
-                padding: EdgeInsets.only(bottom: 10),
+              Padding(
+                padding: const EdgeInsets.only(bottom: 10),
                 child: Row(
                   children: [
-                    Icon(Icons.category),
-                    SizedBox(
+                    const Icon(Icons.category),
+                    const SizedBox(
                       width: 10,
                     ),
-                    Text("TV and Radio"),
+                    Text(jobCategory),
                   ],
                 ),
               ),
-              const Padding(
+              Row(
+                children: [
+                  const Icon(Icons.location_pin),
+                  const SizedBox(
+                    width: 5,
+                  ),
+                  Text(
+                    address,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.normal,
+                    ),
+                  ),
+                ],
+              ),
+              SizedBox(
+                height: MediaQuery.of(context).size.height * 0.01,
+              ),
+              Padding(
                 padding: EdgeInsets.only(bottom: 10),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Row(
                       children: [
-                        Icon(Icons.price_change_outlined),
-                        SizedBox(
+                        const Icon(Icons.price_change_outlined),
+                        const SizedBox(
                           width: 5,
                         ),
                         Text(
-                          "Rs 1000",
-                          style: TextStyle(
+                          price,
+                          style: const TextStyle(
                             fontWeight: FontWeight.bold,
                           ),
                         ),
@@ -99,27 +133,13 @@ class _JobCardState extends State<JobCard> {
                     ),
                     Row(
                       children: [
-                        Icon(Icons.location_pin),
-                        SizedBox(
+                        const Icon(Icons.check_circle),
+                        const SizedBox(
                           width: 5,
                         ),
                         Text(
-                          "Horana",
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ],
-                    ),
-                    Row(
-                      children: [
-                        Icon(Icons.check_circle),
-                        SizedBox(
-                          width: 5,
-                        ),
-                        Text(
-                          "10 Orders",
-                          style: TextStyle(
+                          orderCount.toString(),
+                          style: const TextStyle(
                             fontWeight: FontWeight.bold,
                           ),
                         ),
@@ -132,7 +152,9 @@ class _JobCardState extends State<JobCard> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   ElevatedButton.icon(
-                    onPressed: () {},
+                    onPressed: () {
+                      _makePhoneCall(mobileNumber);
+                    },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: secondaryColor,
                     ),
@@ -152,8 +174,8 @@ class _JobCardState extends State<JobCard> {
                     style: ElevatedButton.styleFrom(
                       backgroundColor: secondaryColor,
                     ),
-                    label: const Text("More"),
-                    icon: const Icon(Icons.read_more),
+                    label: const Text("WishList"),
+                    icon: const Icon(Icons.star_border),
                   ),
                 ],
               ),
@@ -162,5 +184,15 @@ class _JobCardState extends State<JobCard> {
         ),
       ),
     );
+  }
+}
+
+// Function to make a phone call
+_makePhoneCall(String phoneNumber) async {
+  String url = 'tel:$phoneNumber';
+  if (await canLaunch(url)) {
+    await launch(url);
+  } else {
+    throw 'Could not launch $url';
   }
 }
