@@ -25,7 +25,7 @@ class _CreateNewGigState extends State<CreateNewGig> {
   ];
 
   TextEditingController _controllerJobName = new TextEditingController();
-  TextEditingController _controllerMobileNumber = new TextEditingController();
+  TextEditingController _controllerPrice = new TextEditingController();
   var _controllerLocation = new TextEditingController();
 
   String selectedValue = "Radio and TV";
@@ -40,6 +40,7 @@ class _CreateNewGigState extends State<CreateNewGig> {
   String? _sessionToken;
   List<dynamic> _placeList = [];
   bool isVisibale = true;
+  late DocumentSnapshot workerDoc;
 
   @override
   void initState() {
@@ -47,6 +48,7 @@ class _CreateNewGigState extends State<CreateNewGig> {
     _controllerLocation.addListener(() {
       _onChanged();
     });
+    checkWorkerData();
   }
 
   _onChanged() {
@@ -58,6 +60,15 @@ class _CreateNewGigState extends State<CreateNewGig> {
     getSuggestion(_controllerLocation.text);
     setState(() {
       isVisibale = true;
+    });
+  }
+
+  Future<void> checkWorkerData() async {
+    final userId = FirebaseAuth.instance.currentUser!.uid;
+    DocumentSnapshot worker = await getWorkerData(userId);
+
+    setState(() {
+      workerDoc = worker;
     });
   }
 
@@ -112,7 +123,7 @@ class _CreateNewGigState extends State<CreateNewGig> {
         long = position.longitude.toString();
 
         setState(() {
-          locationInfo = street;
+          locationInfo = "The location is set successfully.";
         });
       },
     );
@@ -151,8 +162,9 @@ class _CreateNewGigState extends State<CreateNewGig> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: Text("Location Services Disabled"),
-          content: Text("Please enable location services to use this app."),
+          title: const Text("Location Services Disabled"),
+          content:
+              const Text("Please enable location services to use this app."),
           actions: [
             ElevatedButton(
               child: Text("OK"),
@@ -227,7 +239,7 @@ class _CreateNewGigState extends State<CreateNewGig> {
                           height: 15,
                         ),
                         TextField(
-                          controller: _controllerMobileNumber,
+                          controller: _controllerPrice,
                           keyboardType: TextInputType.number,
                           maxLength: 10,
                           decoration: const InputDecoration(
@@ -272,6 +284,46 @@ class _CreateNewGigState extends State<CreateNewGig> {
                         const SizedBox(
                           height: 20,
                         ),
+                        Text(
+                          locationInfo,
+                          style: const TextStyle(fontSize: 20),
+                        ),
+                        const SizedBox(
+                          height: 20,
+                        ),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            ElevatedButton.icon(
+                              onPressed: () {
+                                _getCurrentLocation().then((value) {
+                                  lat = '${value.latitude}';
+                                  long = '${value.longitude}';
+                                  setState(() {
+                                    locationInfo =
+                                        "The location is set successfully.";
+                                  });
+                                  _liveLocation();
+                                });
+                              },
+                              icon: const Icon(Icons.location_on),
+                              label: const Text("Add Location"),
+                            ),
+                            const SizedBox(
+                              width: 5,
+                            ),
+                            ElevatedButton.icon(
+                              onPressed: () {
+                                _openMap(lat, long);
+                              },
+                              icon: const Icon(Icons.map_outlined),
+                              label: const Text("Open Map"),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(
+                          height: 20,
+                        ),
                         ElevatedButton.icon(
                           style: ElevatedButton.styleFrom(
                             minimumSize: const Size(295, 60),
@@ -286,16 +338,38 @@ class _CreateNewGigState extends State<CreateNewGig> {
                             ),
                           ),
                           onPressed: () {
-                            final displayName = _controllerJobName.text;
-                            final mobile = _controllerMobileNumber.text;
+                            final jobName = _controllerJobName.text;
+                            final price = _controllerPrice.text;
                             final address = _controllerLocation.text;
                             final jobCategory = selectedValue;
-                            final profileImage =
-                                FirebaseAuth.instance.currentUser!.photoURL!;
-                            if (displayName != "" &&
-                                mobile != "" &&
-                                address != "") {
+                            final displayName = workerDoc["displayName"];
+                            final profileUrl = workerDoc['profileUrl'];
+                            final sellerLevel = workerDoc['sellerLevel'];
+                            const orderCount = 0;
+                            final mobileNumber = workerDoc['mobileNumber'];
+                            final comments = {};
+
+                            if (jobName != "" &&
+                                price != "" &&
+                                address != "" &&
+                                locationInfo ==
+                                    "The location is set successfully.") {
                               //Function call here
+                              createNewGig(
+                                context: context,
+                                jobName: jobName,
+                                price: price,
+                                address: address,
+                                displayName: displayName,
+                                jobCategory: jobCategory,
+                                profileUrl: profileUrl,
+                                sellerLevel: sellerLevel,
+                                orderCount: orderCount,
+                                mobileNumber: mobileNumber,
+                                comments: comments,
+                                lat: lat,
+                                long: long,
+                              );
                             } else {
                               ScaffoldMessenger.of(context).showSnackBar(
                                 const SnackBar(
@@ -322,4 +396,57 @@ class _CreateNewGigState extends State<CreateNewGig> {
       ),
     );
   }
+}
+
+Future<DocumentSnapshot> getWorkerData(userId) async {
+  // Reference to the 'worker' collection
+  CollectionReference workers = FirebaseFirestore.instance.collection('worker');
+
+  // Reference to the specific document using the provided document ID
+  DocumentReference documentRef = workers.doc(userId);
+
+  // Get the document snapshot
+  DocumentSnapshot documentSnapshot = await documentRef.get();
+
+  // Check if the document exists
+  // if (documentSnapshot.exists) {
+  //   return documentSnapshot;
+  // }
+  return documentSnapshot;
+}
+
+Future createNewGig({
+  required BuildContext context,
+  required String jobName,
+  required String price,
+  required String address,
+  required String displayName,
+  required String jobCategory,
+  required String profileUrl,
+  required String sellerLevel,
+  required int orderCount,
+  required String mobileNumber,
+  required Object comments,
+  required String lat,
+  required String long,
+}) async {
+  final uid = FirebaseAuth.instance.currentUser!.uid;
+  final docWorker = FirebaseFirestore.instance.collection("job").doc();
+  final data = {
+    "userId": uid,
+    "jobName": jobName,
+    "price": price,
+    "address": address,
+    "displayName": displayName,
+    "jobCategory": jobCategory,
+    "profileUrl": profileUrl,
+    "sellerLevel": sellerLevel,
+    "orderCount": orderCount,
+    "mobileNumber": mobileNumber,
+    "comments": comments,
+    "lat": lat,
+    "long": long,
+  };
+
+  await docWorker.set(data).then((value) => {Navigator.pop(context)});
 }

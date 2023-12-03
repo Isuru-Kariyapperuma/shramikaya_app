@@ -181,6 +181,7 @@ Future createWorkProfile(
     "address": address,
     "profileUrl": profile,
     "jobCategory": jobCategory,
+    "sellerLevel": "Level One Seller",
   };
 
   await docWorker.set(data).then((value) => {Navigator.pop(context)});
