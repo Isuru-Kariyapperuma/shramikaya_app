@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:shramikaya_app/screens/active_gigs.dart';
 import 'package:shramikaya_app/screens/create_new_gig.dart';
+import 'package:shramikaya_app/screens/pause_gigs.dart';
 import 'package:shramikaya_app/utils/colors.dart';
 
 class ProfileDetails extends StatelessWidget {
@@ -68,7 +70,12 @@ class ProfileDetails extends StatelessWidget {
               ),
             ),
             onTap: () {
-              print("Tap 2");
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => ActiveGigs(),
+                ),
+              );
             },
           ),
         ),
@@ -97,7 +104,12 @@ class ProfileDetails extends StatelessWidget {
               ),
             ),
             onTap: () {
-              print("Tap 3");
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) =>  PauseGigs(),
+                ),
+              );
             },
           ),
         ),
@@ -113,11 +125,12 @@ class ProfileDetails extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Icon(
-                      Icons.manage_accounts_rounded,
+                      Icons.delete_forever_rounded,
                       size: 50,
+                      color: Colors.red,
                     ),
                     Text(
-                      "Edit Worker Profile - වැඩ ගිණුම වෙනස් කිරීම",
+                      "Delete Worker Profile - වැඩ ගිණුම ඉවත් කිරීම",
                       textAlign: TextAlign.center,
                     ),
                   ],

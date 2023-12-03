@@ -446,6 +446,7 @@ Future createNewGig({
     "comments": comments,
     "lat": lat,
     "long": long,
+    "isActive": true,
   };
 
   await docWorker.set(data).then((value) => {Navigator.pop(context)});

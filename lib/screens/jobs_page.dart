@@ -15,12 +15,6 @@ class JobsPage extends StatefulWidget {
 class _JobsPageState extends State<JobsPage> {
   final GetListedJobService _getListedJobService = GetListedJobService();
 
-  final List _jobs = [
-    "Job post 01",
-    "Job post 02",
-    "Job post 03",
-  ];
-
   @override
   Widget build(BuildContext context) {
     return SafeArea(
@@ -54,11 +48,18 @@ class _JobsPageState extends State<JobsPage> {
           future: _getListedJobService.getJobs(),
           builder: (context, snapshot) {
             if (snapshot.connectionState == ConnectionState.waiting) {
-              return const CircularProgressIndicator();
+              return const Center(
+                  child: CircularProgressIndicator(
+                valueColor: AlwaysStoppedAnimation<Color>(Colors.orange),
+              ));
             } else if (snapshot.hasError) {
               return Text('Error: ${snapshot.error}');
             } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-              return const Text('No jobs available.');
+              return const Center(
+                  child: Text(
+                'No jobs available.',
+                style: TextStyle(fontSize: 25),
+              ));
             } else {
               final jobs = snapshot.data!
                   .map((doc) => doc.data() as Map<String, dynamic>)

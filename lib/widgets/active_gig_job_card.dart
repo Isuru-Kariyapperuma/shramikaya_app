@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:shramikaya_app/utils/colors.dart';
-import 'package:url_launcher/url_launcher.dart';
+import 'package:shramikaya_app/widgets/getListedJobs.dart';
 
-class JobCard extends StatelessWidget {
+class ActiveJobCard extends StatelessWidget {
+  final GetListedJobService _getListedJobService = GetListedJobService();
+
+  final String jobId;
   final String jobName;
   final String price;
   final String address;
@@ -13,8 +16,9 @@ class JobCard extends StatelessWidget {
   final int orderCount;
   final String mobileNumber;
 
-  const JobCard({
+  ActiveJobCard({
     super.key,
+    required this.jobId,
     required this.jobName,
     required this.price,
     required this.address,
@@ -149,34 +153,43 @@ class JobCard extends StatelessWidget {
                 ),
               ),
               Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   ElevatedButton.icon(
-                    onPressed: () {
-                      _makePhoneCall(mobileNumber);
+                    onPressed: () async {
+                      await _getListedJobService
+                          .toggleIsActive(jobId, true)
+                          .then((value) => {Navigator.pop(context)});
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: secondaryColor,
                     ),
-                    label: const Text("Call"),
-                    icon: const Icon(Icons.call),
+                    label: const Text("Pause"),
+                    icon: const Icon(Icons.pause),
+                  ),
+                  const SizedBox(
+                    width: 10,
                   ),
                   ElevatedButton.icon(
-                    onPressed: () {},
+                    onPressed: () async {
+                      await _getListedJobService
+                          .deleteJob(jobId)
+                          .then((value) => {Navigator.pop(context)});
+                    },
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: secondaryColor,
+                      backgroundColor: Colors.red,
                     ),
-                    label: const Text("Comments"),
-                    icon: const Icon(Icons.comment),
+                    label: const Text("Delete"),
+                    icon: const Icon(Icons.delete_forever),
                   ),
-                  ElevatedButton.icon(
-                    onPressed: () {},
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: secondaryColor,
-                    ),
-                    label: const Text("Add"),
-                    icon: const Icon(Icons.star_border),
-                  ),
+                  // ElevatedButton.icon(
+                  //   onPressed: () {},
+                  //   style: ElevatedButton.styleFrom(
+                  //     backgroundColor: secondaryColor,
+                  //   ),
+                  //   label: const Text("Add"),
+                  //   icon: const Icon(Icons.star_border),
+                  // ),
                 ],
               ),
             ],
@@ -184,15 +197,5 @@ class JobCard extends StatelessWidget {
         ),
       ),
     );
-  }
-}
-
-// Function to make a phone call
-_makePhoneCall(String phoneNumber) async {
-  String url = 'tel:$phoneNumber';
-  if (await canLaunch(url)) {
-    await launch(url);
-  } else {
-    throw 'Could not launch $url';
   }
 }
